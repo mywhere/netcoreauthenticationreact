@@ -21,10 +21,10 @@ export default class ApiAuthorizationRoutes extends Component {
   }
 }
 
-function loginAction(name){
+function loginAction(name: LoginActions){
     return (<Login action={name}></Login>);
 }
 
-function logoutAction(name) {
+function logoutAction(name: LogoutActions) {
     return (<Logout action={name}></Logout>);
 }

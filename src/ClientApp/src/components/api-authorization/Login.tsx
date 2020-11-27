@@ -1,6 +1,6 @@
 import React from 'react'
 import { Component } from 'react';
-import authService from './AuthorizeService';
+import authService, { AuthenticationResult } from './AuthorizeService';
 import { AuthenticationResultStatus } from './AuthorizeService';
 import { LoginActions, QueryParameterNames, ApplicationPaths } from './ApiAuthorizationConstants';
 
@@ -8,8 +8,17 @@ import { LoginActions, QueryParameterNames, ApplicationPaths } from './ApiAuthor
 // This is the starting point for the login process. Any component that needs to authenticate
 // a user can simply perform a redirect to this component with a returnUrl query parameter and
 // let the component perform the login and return back to the return url.
-export class Login extends Component {
-    constructor(props) {
+
+export interface LoginProps {
+    action: LoginActions;
+}
+
+interface LoginState {
+    message: string | null | undefined;
+}
+
+export class Login extends Component<LoginProps, LoginState> {
+    constructor(props: LoginProps) {
         super(props);
 
         this.state = {
@@ -17,14 +26,14 @@ export class Login extends Component {
         };
     }
 
-    componentDidMount() {
+    public componentDidMount(): void {
         const action = this.props.action;
         switch (action) {
             case LoginActions.Login:
-                this.login(this.getReturnUrl());
+                this._login(this._getReturnUrl());
                 break;
             case LoginActions.LoginCallback:
-                this.processLoginCallback();
+                this._processLoginCallback();
                 break;
             case LoginActions.LoginFailed:
                 const params = new URLSearchParams(window.location.search);
@@ -32,22 +41,22 @@ export class Login extends Component {
                 this.setState({ message: error });
                 break;
             case LoginActions.Profile:
-                this.redirectToProfile();
+                this._redirectToProfile();
                 break;
             case LoginActions.Register:
-                this.redirectToRegister();
+                this._redirectToRegister();
                 break;
             default:
                 throw new Error(`Invalid action '${action}'`);
         }
     }
 
-    render() {
-        const action = this.props.action;
+    public render(): JSX.Element {
+        const { action } = this.props;
         const { message } = this.state;
 
         if (!!message) {
-            return <div>{message}</div>
+            return (<div>{message}</div>);
         } else {
             switch (action) {
                 case LoginActions.Login:
@@ -63,14 +72,14 @@ export class Login extends Component {
         }
     }
 
-    async login(returnUrl) {
+    private async _login(returnUrl: string): Promise<void> {
         const state = { returnUrl };
         const result = await authService.signIn(state);
         switch (result.status) {
             case AuthenticationResultStatus.Redirect:
                 break;
             case AuthenticationResultStatus.Success:
-                await this.navigateToReturnUrl(returnUrl);
+                await this._navigateToReturnUrl(returnUrl);
                 break;
             case AuthenticationResultStatus.Fail:
                 this.setState({ message: result.message });
@@ -80,16 +89,16 @@ export class Login extends Component {
         }
     }
 
-    async processLoginCallback() {
+    private async _processLoginCallback(): Promise<void> {
         const url = window.location.href;
-        const result = await authService.completeSignIn(url);
+        const result: AuthenticationResult = await authService.completeSignIn(url);
         switch (result.status) {
             case AuthenticationResultStatus.Redirect:
                 // There should not be any redirects as the only time completeSignIn finishes
                 // is when we are doing a redirect sign in flow.
                 throw new Error('Should not redirect.');
             case AuthenticationResultStatus.Success:
-                await this.navigateToReturnUrl(this.getReturnUrl(result.state));
+                await this._navigateToReturnUrl(this._getReturnUrl(result.state));
                 break;
             case AuthenticationResultStatus.Fail:
                 this.setState({ message: result.message });
@@ -99,7 +108,7 @@ export class Login extends Component {
         }
     }
 
-    getReturnUrl(state) {
+    private _getReturnUrl(state?: any): string {
         const params = new URLSearchParams(window.location.search);
         const fromQuery = params.get(QueryParameterNames.ReturnUrl);
         if (fromQuery && !fromQuery.startsWith(`${window.location.origin}/`)) {
@@ -109,15 +118,15 @@ export class Login extends Component {
         return (state && state.returnUrl) || fromQuery || `${window.location.origin}/`;
     }
 
-    redirectToRegister() {
-        this.redirectToApiAuthorizationPath(`${ApplicationPaths.IdentityRegisterPath}?${QueryParameterNames.ReturnUrl}=${encodeURI(ApplicationPaths.Login)}`);
+    private _redirectToRegister(): void {
+        this._redirectToApiAuthorizationPath(`${ApplicationPaths.IdentityRegisterPath}?${QueryParameterNames.ReturnUrl}=${encodeURI(ApplicationPaths.Login)}`);
     }
 
-    redirectToProfile() {
-        this.redirectToApiAuthorizationPath(ApplicationPaths.IdentityManagePath);
+    private _redirectToProfile(): void {
+        this._redirectToApiAuthorizationPath(ApplicationPaths.IdentityManagePath);
     }
 
-    redirectToApiAuthorizationPath(apiAuthorizationPath) {
+    private _redirectToApiAuthorizationPath(apiAuthorizationPath: string): void {
         const redirectUrl = `${window.location.origin}/${apiAuthorizationPath}`;
         // It's important that we do a replace here so that when the user hits the back arrow on the
         // browser they get sent back to where it was on the app instead of to an endpoint on this
@@ -125,7 +134,7 @@ export class Login extends Component {
         window.location.replace(redirectUrl);
     }
 
-    navigateToReturnUrl(returnUrl) {
+    private _navigateToReturnUrl(returnUrl: string): void {
         // It's important that we do a replace here so that we remove the callback uri with the
         // fragment containing the tokens from the browser history.
         window.location.replace(returnUrl);

@@ -1,4 +1,4 @@
-import { User, UserManager, WebStorageStateStore } from 'oidc-client';
+import { Profile, User, UserManager, WebStorageStateStore } from 'oidc-client';
 import { ApplicationPaths, ApplicationName } from './ApiAuthorizationConstants';
 
 export interface AuthorizationCallback {
@@ -33,7 +33,7 @@ export class AuthorizeService {
         return !!user;
     }
 
-    public async getUser(): Promise<any | null> {
+    public async getUser(): Promise<Profile | null> {
         if (!!this._user && !!this._user.profile) {
             return this._user.profile;
         }
@@ -146,7 +146,7 @@ export class AuthorizeService {
         try {
             const response = await this._userManager.signoutCallback(url);
             this._updateState(undefined);
-            return this._success(response && response.data);
+            return this._success(response && response.state);
         } catch (error) {
             console.log(`There was an error trying to log out '${error}'.`);
             return this._error(error);
@@ -221,11 +221,8 @@ export class AuthorizeService {
             this._updateState(undefined);
         });
     }
-
-    public static get instance() { return authService }
 }
 
 const authService = new AuthorizeService();
 
 export default authService;
-

@@ -4,32 +4,36 @@ import { Link } from 'react-router-dom';
 import { LoginMenu } from './api-authorization/LoginMenu';
 import './NavMenu.css';
 
-export class NavMenu extends Component {
-  static displayName = NavMenu.name;
+export interface NavMenuProps {
+}
 
-  constructor (props) {
+interface NavMenuState {
+  collapsed?: boolean;
+}
+
+export class NavMenu extends Component<NavMenuProps, NavMenuState> {
+  public constructor(props: NavMenuProps) {
     super(props);
-
-    this.toggleNavbar = this.toggleNavbar.bind(this);
     this.state = {
       collapsed: true
     };
   }
 
-  toggleNavbar () {
+  private toggleNavbar = (): void => {
     this.setState({
       collapsed: !this.state.collapsed
     });
-  }
+  };
 
-  render () {
+  public render(): JSX.Element {
+    const { collapsed } = this.state;
     return (
       <header>
         <Navbar className="navbar-expand-sm navbar-toggleable-sm ng-white border-bottom box-shadow mb-3" light>
           <Container>
             <NavbarBrand tag={Link} to="/">netcoreAuthenticationReact</NavbarBrand>
             <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
-            <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
+            <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!collapsed} navbar>
               <ul className="navbar-nav flex-grow">
                 <NavItem>
                   <NavLink tag={Link} className="text-dark" to="/">Home</NavLink>
