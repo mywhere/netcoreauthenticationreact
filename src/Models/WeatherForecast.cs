@@ -1,6 +1,6 @@
 using System;
 
-namespace netcoreAuthenticationReact
+namespace netcoreAuthenticationReact.Models
 {
     public class WeatherForecast
     {
